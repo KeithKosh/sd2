@@ -4,14 +4,17 @@
 
 const { min, round } = Math;
 
-export function initCanvas(win, doc, bodyElement) {
+export default class Canvas {
+  constructor(bodyElement) {
+    this.canvasDOM =  _createCanvas(document, bodyElement);
 
-  let canvasDOM =  _createCanvas(doc, bodyElement);
+    window.addEventListener('resize', () => _resizeCanvas(window, canvasDOM));
+    _resizeCanvas(window, this.canvasDOM);
+  }
 
-  win.addEventListener('resize', () => _resizeCanvas(win, canvasDOM));
-  _resizeCanvas(win, canvasDOM);
-
-  return canvasDOM;
+  get obj() {
+    return this.canvasDOM;
+  }
 }
 
 // 1920 * 1080 / 960 * 540
@@ -30,12 +33,12 @@ function _resizeCanvas(win, canvasDOM) {
   let scaleFactorX = win.innerWidth / canvasDOM.width;
   let scaleFactorY = win.innerHeight / canvasDOM.height;
   let scaleFactor = min(scaleFactorX, scaleFactorY);
-  let offsetX = (scaleFactorY <= scaleFactorX
+  let offsetX = scaleFactorY <= scaleFactorX
     ? round((win.innerWidth - (canvasDOM.width * scaleFactor)) / 2 / scaleFactor)
-    : 0);
-  let offsetY = (scaleFactorY > scaleFactorX
+    : 0;
+  let offsetY = scaleFactorY > scaleFactorX
     ? round((win.innerHeight - (canvasDOM.height * scaleFactor)) / 2 / scaleFactor)
-    : 0);
+    : 0;
 
   let transformString = `scale(${scaleFactor}, ${scaleFactor}) translate(${offsetX}px, ${offsetY}px)`;
   canvasDOM.style.transform = transformString;

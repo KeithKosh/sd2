@@ -2,7 +2,7 @@
  * Engine: handles game loop
  */
 
-const { min, max, random, round } = Math;
+const { ceil, floor, min, max, random, round } = Math;
 
 const TILE_SIZE = 16; // tile pixel dimensions X/Y
 const GRAVITY = 0.25; // gravity acts on airborne sprite by this factor
@@ -65,44 +65,50 @@ function _gameLoop() {
 function _updatePhysics() {
   // TODO condense into separate class, but for now fine here.
 
-  // first of all: check yMomentum
-  // gravity ALWAYS affects yMomentum.
+  // first check only intercepting tiles w/o momentum?
+  // this way we can check for being in water, in front of special tile, etc.
+  // TODO do this later.
 
-  _sprite.yM = min(_sprite.yM + GRAVITY, MAX_Y);
+  // X and Y must be checked seperately as each can afect the other.
+  // give preferential check to X first - doesn't matter too much.
 
-  // now check if sprite has ground below it.
-  let xCoord = min(max(0, round(_sprite.x / TILE_SIZE)), SCREEN_COLUMNS - 1);
-  let yCoord = min(max(0, round((_sprite.y + TILE_SIZE) / TILE_SIZE)), SCREEN_ROWS - 1);
+  // NOTE: checks with xMomemtum included
+  let iTiles = getInterceptingTiles(_sprite, _levelData, 'x');
 
-  let below = _levelData[yCoord][xCoord];
-
-  if (below === 1 && _sprite.yM >= 0) {
-    // ground! land only if not previously on ground
-    if (!_sprite.anchored) {
-      // TODO land
-      _sprite.anchored = true;
-    }
-    // but always reset any momentum
-    _sprite.yM = 0;
-  } else {
-    _sprite.anchored = false;
-  }
-
-  // now check xMomentum
-
-  xCoord = min(max(0, round((_sprite.x + _sprite.xM) / TILE_SIZE)), SCREEN_COLUMNS - 1);
-  yCoord = min(max(0, round(_sprite.y / TILE_SIZE)), SCREEN_ROWS - 1);
-  let beside = _levelData[yCoord][xCoord];
-
-  if (beside && _sprite.xM) {
+  if (iTiles.includes(1) && _sprite.xM) {
+    // BONK
     _sprite.xM = 0;
+    // do some rounding.
   } else {
     _sprite.xM = _sprite.xM / 1.5;
     if (_sprite.xM < 0.1 && _sprite.xM > -0.1) _sprite.xM = 0;
   }
 
-  // NOTE: no rounding - this is only done on screen draw.
   _sprite.x += _sprite.xM;
+
+  // now check yMomentum. but first, gravity ALWAYS affects yMomentum.
+  _sprite.yM = min(_sprite.yM + GRAVITY, MAX_Y);
+
+  // recheck intercepting tiles - as may have changed due to xM above
+  iTiles = getInterceptingTiles(_sprite, _levelData, 'y');
+
+  if (iTiles.includes(1)) {
+    if (_sprite.yM > 0) {
+      // ground! land only if not previously on ground
+      if (!_sprite.anchored) {
+        // ROUND
+        _sprite.y += _sprite.yM - ((_sprite.y + _sprite.yM) % TILE_SIZE); // todo: subtract sprite height instead of TILE_SIZE
+        _sprite.anchored = true;
+      }
+      // but always reset any momentum
+      _sprite.yM = 0;
+    } else if (_sprite.yM < 0) {
+      _sprite.yM = _sprite.yM / -2;
+    }
+  } else {
+    _sprite.anchored = false;
+  }
+
   _sprite.y += _sprite.yM;
 }
 
@@ -119,7 +125,7 @@ function _buildLevel() {
       if (y === 0 || y === SCREEN_ROWS - 1 || x === 0 || x === SCREEN_COLUMNS - 1) {
         levelData[y][x] = 1;
       } else {
-        levelData[y][x] = round(random() * 8) + 1 > 7 ? 1 : 0;
+        levelData[y][x] = (x !== 1 || y !== 1) && round(random() * 8) + 1 > 7 ? 1 : 0;
       }
     }
   }
@@ -139,7 +145,40 @@ function _drawTiles(levelData, block) {
 
 function _drawChar() {
   _context.fillStyle = "#CC0000";
+  /* note rounding: this way we can store more precise values interally, but
+     (generally) always draw everything to a whole pixel for precise graphics. */
   _context.fillRect(round(_sprite.x), round(_sprite.y), TILE_SIZE, TILE_SIZE);
+}
+
+function getInterceptingTiles(sprite, levelData, includeMomentum) {
+  let addXMomentum = includeMomentum === 'x';
+  let addYMomentum = includeMomentum === 'y';
+  // get sprite coordinates in tileset units
+  /* NOTE: momentum is always rounded UP when calculating intersects so
+     small momentum values will always check the next tile over. */
+  let tileStartX = floor((sprite.x + 
+    (addXMomentum && sprite.xM < 0 ? ceil(sprite.xM) : 0)
+  ) / TILE_SIZE);
+  let tileEndX = floor((sprite.x + TILE_SIZE - 1 + 
+    (addXMomentum && sprite.xM > 0 ? ceil(sprite.xM) : 0)
+  ) / TILE_SIZE); // TODO add sprite width instead of TILE_SIZE
+  let tileStartY = floor((sprite.y +
+    (addYMomentum && sprite.yM < 0 ? ceil(sprite.yM) : 0)
+  ) / TILE_SIZE);
+  let tileEndY = floor((sprite.y + TILE_SIZE - 1 +
+    (addYMomentum && sprite.yM > 0 ? ceil(sprite.yM) : 0)
+  ) / TILE_SIZE); // TODO add sprite height instead of TILE_SIZE
+
+  let tileArray = [];
+  for (let y = tileStartY; y <= tileEndY; y++) {
+    for (let x = tileStartX; x <= tileEndX; x++) {
+      tileArray.push(levelData[y][x]);
+    }
+  }
+
+  // console.log(`check from ${tileStartX},${tileStartY} to ${tileEndX},${tileEndY}: ${tileArray}`);
+
+  return tileArray;
 }
 
 // -------- TODO move to separate input script

@@ -1,16 +1,16 @@
+import Canvas from './canvas.js';
 import { loadAssets } from './loader.js';
-import { initCanvas } from './canvas.js';
 import { beginGameLoop } from './engine.js';
 
+let canvasObj = new Canvas(document.querySelector("body")).obj;
 let gameData = {};
 
-initialize();
+initialize(canvasObj, gameData);
 
-async function initialize() {
+async function initialize(canvasObj, gameData) {
   gameData.assets = await loadAssets(document);
 
   let bodyDOM = document.querySelector('body');
-  let canvasDOM = initCanvas(window, document, bodyDOM);
 
-  beginGameLoop(window, canvasDOM.getContext('2d', { alpha: false }), gameData.assets);
+  beginGameLoop(window, canvasObj.getContext('2d', { alpha: false }), gameData.assets);
 }
