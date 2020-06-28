@@ -8,7 +8,7 @@ export default class Canvas {
   constructor(bodyElement) {
     this.canvasDOM =  _createCanvas(document, bodyElement);
 
-    window.addEventListener('resize', () => _resizeCanvas(window, canvasDOM));
+    window.addEventListener('resize', () => _resizeCanvas(window, this.canvasDOM));
     _resizeCanvas(window, this.canvasDOM);
   }
 
