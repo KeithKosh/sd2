@@ -76,12 +76,18 @@ function _updatePhysics() {
   let iTiles = getInterceptingTiles(_sprite, _levelData, 'x');
 
   if (iTiles.includes(1) && _sprite.xM) {
-    // BONK
-    _sprite.xM = 0;
     // do some rounding.
+    let oldPos = _sprite.x + _sprite.xM;
+    _sprite.x = round(_sprite.x + _sprite.xM + (_sprite.xM < 0 ? TILE_SIZE : 0) - (oldPos % TILE_SIZE));
+    // THEN reset momentum.
+    _sprite.xM = 0;
   } else {
+    // natural horizontal slowdown
     _sprite.xM = _sprite.xM / 1.5;
-    if (_sprite.xM < 0.1 && _sprite.xM > -0.1) _sprite.xM = 0;
+    if (_sprite.xM < 0.1 && _sprite.xM > -0.1) {
+      _sprite.xM = 0;
+      _sprite.x = round(_sprite.x);
+    }
   }
 
   _sprite.x += _sprite.xM;
