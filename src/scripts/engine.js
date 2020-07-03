@@ -6,7 +6,7 @@ const { ceil, floor, min, max, random, round } = Math;
 
 const TILE_SIZE = 16; // tile pixel dimensions X/Y
 const GRAVITY = 0.25; // gravity acts on airborne sprite by this factor
-const MAX_Y = 4; // a falling sprite cannot move faster than this (TODO use same value for x momentum?)
+const MAX_Y = 6; // a falling sprite cannot move faster than this (TODO use same value for x momentum?)
 
 let _win;
 let _context;
@@ -103,13 +103,17 @@ function _updatePhysics() {
       // ground! land only if not previously on ground
       if (!_sprite.anchored) {
         // ROUND
-        _sprite.y += _sprite.yM - ((_sprite.y + _sprite.yM) % TILE_SIZE); // todo: subtract sprite height instead of TILE_SIZE
+        _sprite.y = round(_sprite.y + _sprite.yM - ((_sprite.y + _sprite.yM) % TILE_SIZE)); // todo: subtract sprite height instead of TILE_SIZE
         _sprite.anchored = true;
       }
       // but always reset any momentum
       _sprite.yM = 0;
     } else if (_sprite.yM < 0) {
-      _sprite.yM = _sprite.yM / -2;
+      // BONK head
+      // round
+      _sprite.y = round(_sprite.y + _sprite.yM + TILE_SIZE - ((_sprite.y + _sprite.yM) % TILE_SIZE));
+      // and reset momentum
+      _sprite.yM = 0;
     }
   } else {
     _sprite.anchored = false;
