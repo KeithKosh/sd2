@@ -13,7 +13,7 @@ let _context;
 let _assets;
 
 let _levelData = [];
-let _sprite = { x: TILE_SIZE, y: TILE_SIZE, xM: 0, yM: 0, anchored: true };
+let _sprite = { x: TILE_SIZE, y: TILE_SIZE, xM: 0, yM: 0, anchored: true, jumpLimbo: false };
 
 let SCREEN_COLUMNS = 17;
 let SCREEN_ROWS = 10;
@@ -49,8 +49,14 @@ function _gameLoop() {
   }
 
   if (_activeInput.includes(KEY_JUMP)) {
-    // can only jump if grounded
-    if (_sprite.anchored) _sprite.yM = -5;
+    // can only jump if grounded and not in jump limbo
+    if (_sprite.anchored && !_sprite.jumpLimbo) {
+      _sprite.yM = -5;
+      _sprite.jumpLimbo = true; // prevent jump until out of limbo
+    }
+  } else if (_sprite.anchored) {
+    // only out of jump limbo when on the ground
+    _sprite.jumpLimbo = false;
   }
 
   // loop ENDS with a clear and redraw.
