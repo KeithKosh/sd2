@@ -58,6 +58,9 @@ function _gameLoop() {
   _drawTiles(_levelData, _assets);
   _drawChar();
 
+  // TODO add flag, etc. so this can be toggled
+  _drawDebugInfo();
+
   // frame is fully drawn, wait until next frame.
   _win.requestAnimationFrame(_gameLoop);
 }
@@ -114,6 +117,7 @@ function _updatePhysics() {
       _sprite.y = round(_sprite.y + _sprite.yM + TILE_SIZE - ((_sprite.y + _sprite.yM) % TILE_SIZE));
       // and reset momentum
       _sprite.yM = 0;
+      _sprite.anchored = false;
     }
   } else {
     _sprite.anchored = false;
@@ -189,6 +193,18 @@ function getInterceptingTiles(sprite, levelData, includeMomentum) {
   // console.log(`check from ${tileStartX},${tileStartY} to ${tileEndX},${tileEndY}: ${tileArray}`);
 
   return tileArray;
+}
+
+function _drawDebugInfo() {
+  _context.font = "12px monospace";
+  _context.fillStyle = '#dddddd';
+  _context.textBaseline = 'top';
+  _context.fillText(`${_sprite.x.toFixed(2)
+    },${_sprite.y.toFixed(2)
+    } ${_sprite.xM.toFixed(2)
+    } ${_sprite.yM.toFixed(2)
+    } ${_sprite.anchored}
+    `, 0, 0);
 }
 
 // -------- TODO move to separate input script
