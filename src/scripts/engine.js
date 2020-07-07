@@ -2,6 +2,8 @@
  * Engine: handles game loop
  */
 
+import Sprite from './sprite.js';
+
 const { ceil, floor, min, max, random, round } = Math;
 
 const TILE_SIZE = 16; // tile pixel dimensions X/Y
@@ -13,7 +15,7 @@ let _context;
 let _assets;
 
 let _levelData = [];
-let _sprite = { x: TILE_SIZE, y: TILE_SIZE, xM: 0, yM: 0, anchored: true, jumpLimbo: false };
+let _sprite = new Sprite(TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE); // haha
 
 let SCREEN_COLUMNS = 17;
 let SCREEN_ROWS = 10;
@@ -62,7 +64,7 @@ function _gameLoop() {
   // loop ENDS with a clear and redraw.
   _clearCanvas();
   _drawTiles(_levelData, _assets);
-  _drawChar();
+  _sprite.drawSprite(_context);
 
   // TODO add flag, etc. so this can be toggled
   _drawDebugInfo();
@@ -82,7 +84,7 @@ function _updatePhysics() {
   // give preferential check to X first - doesn't matter too much.
 
   // NOTE: checks with xMomemtum included
-  let iTiles = getInterceptingTiles(_sprite, _levelData, 'x');
+  let iTiles = _sprite.interceptingTiles(_levelData, 'x');
 
   if (iTiles.includes(1) && _sprite.xM) {
     // do some rounding.
@@ -105,7 +107,7 @@ function _updatePhysics() {
   _sprite.yM = min(_sprite.yM + GRAVITY, MAX_Y);
 
   // recheck intercepting tiles - as may have changed due to xM above
-  iTiles = getInterceptingTiles(_sprite, _levelData, 'y');
+  iTiles = _sprite.interceptingTiles(_levelData, 'y');
 
   if (iTiles.includes(1)) {
     if (_sprite.yM > 0) {
@@ -161,44 +163,6 @@ function _drawTiles(levelData, block) {
       }
     }
   }
-}
-
-function _drawChar() {
-  _context.fillStyle = "#CC0000";
-  /* note rounding: this way we can store more precise values interally, but
-     (generally) always draw everything to a whole pixel for precise graphics. */
-  _context.fillRect(round(_sprite.x), round(_sprite.y), TILE_SIZE, TILE_SIZE);
-}
-
-function getInterceptingTiles(sprite, levelData, includeMomentum) {
-  let addXMomentum = includeMomentum === 'x';
-  let addYMomentum = includeMomentum === 'y';
-  // get sprite coordinates in tileset units
-  /* NOTE: momentum is always rounded UP when calculating intersects so
-     small momentum values will always check the next tile over. */
-  let tileStartX = floor((sprite.x + 
-    (addXMomentum && sprite.xM < 0 ? ceil(sprite.xM) : 0)
-  ) / TILE_SIZE);
-  let tileEndX = floor((sprite.x + TILE_SIZE - 1 + 
-    (addXMomentum && sprite.xM > 0 ? ceil(sprite.xM) : 0)
-  ) / TILE_SIZE); // TODO add sprite width instead of TILE_SIZE
-  let tileStartY = floor((sprite.y +
-    (addYMomentum && sprite.yM < 0 ? ceil(sprite.yM) : 0)
-  ) / TILE_SIZE);
-  let tileEndY = floor((sprite.y + TILE_SIZE - 1 +
-    (addYMomentum && sprite.yM > 0 ? ceil(sprite.yM) : 0)
-  ) / TILE_SIZE); // TODO add sprite height instead of TILE_SIZE
-
-  let tileArray = [];
-  for (let y = tileStartY; y <= tileEndY; y++) {
-    for (let x = tileStartX; x <= tileEndX; x++) {
-      tileArray.push(levelData[y][x]);
-    }
-  }
-
-  // console.log(`check from ${tileStartX},${tileStartY} to ${tileEndX},${tileEndY}: ${tileArray}`);
-
-  return tileArray;
 }
 
 function _drawDebugInfo() {
