@@ -15,7 +15,13 @@ let _context;
 let _assets;
 
 let _levelData = [];
-let _sprite = new Sprite(TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE); // haha
+let _sprite = new Sprite(
+  12,
+  20,
+  TILE_SIZE,
+  TILE_SIZE,
+  TILE_SIZE
+); // haha
 
 let SCREEN_COLUMNS = 17;
 let SCREEN_ROWS = 10;
@@ -86,11 +92,8 @@ function _updatePhysics() {
   // NOTE: checks with xMomemtum included
   let iTiles = _sprite.interceptingTiles(_levelData, 'x');
 
-  if (iTiles.includes(1) && _sprite.xM) {
-    // do some rounding.
-    let oldPos = _sprite.x + _sprite.xM;
-    _sprite.x = round(_sprite.x + _sprite.xM + (_sprite.xM < 0 ? TILE_SIZE : 0) - (oldPos % TILE_SIZE));
-    // THEN reset momentum.
+  if (iTiles.includes(1) && _sprite.xM !== 0) {
+    _sprite.flushPosition('x');
     _sprite.xM = 0;
   } else {
     // natural horizontal slowdown
@@ -109,24 +112,10 @@ function _updatePhysics() {
   // recheck intercepting tiles - as may have changed due to xM above
   iTiles = _sprite.interceptingTiles(_levelData, 'y');
 
-  if (iTiles.includes(1)) {
-    if (_sprite.yM > 0) {
-      // ground! land only if not previously on ground
-      if (!_sprite.anchored) {
-        // ROUND
-        _sprite.y = round(_sprite.y + _sprite.yM - ((_sprite.y + _sprite.yM) % TILE_SIZE)); // todo: subtract sprite height instead of TILE_SIZE
-        _sprite.anchored = true;
-      }
-      // but always reset any momentum
-      _sprite.yM = 0;
-    } else if (_sprite.yM < 0) {
-      // BONK head
-      // round
-      _sprite.y = round(_sprite.y + _sprite.yM + TILE_SIZE - ((_sprite.y + _sprite.yM) % TILE_SIZE));
-      // and reset momentum
-      _sprite.yM = 0;
-      _sprite.anchored = false;
-    }
+  if (iTiles.includes(1) && _sprite.yM !== 0) {
+    _sprite.flushPosition('y');
+    _sprite.anchored = _sprite.yM > 0;
+    _sprite.yM = 0;
   } else {
     _sprite.anchored = false;
   }

@@ -37,13 +37,13 @@ export default class Sprite {
     let tileStartX = floor((this.x + 
       (addXMomentum && this.xM < 0 ? ceil(this.xM) : 0)
     ) / this.tileSize);
-    let tileEndX = floor((this.x + this.tileSize - 1 + 
+    let tileEndX = floor((this.x + this.width - 1 + 
       (addXMomentum && this.xM > 0 ? ceil(this.xM) : 0)
-    ) / this.tileSize); // TODO add sprite width instead of tileSize
+    ) / this.tileSize);
     let tileStartY = floor((this.y +
       (addYMomentum && this.yM < 0 ? ceil(this.yM) : 0)
     ) / this.tileSize);
-    let tileEndY = floor((this.y + this.tileSize - 1 +
+    let tileEndY = floor((this.y + this.height - 1 +
       (addYMomentum && this.yM > 0 ? ceil(this.yM) : 0)
     ) / this.tileSize); // TODO add sprite height instead of tileSize
   
@@ -58,5 +58,34 @@ export default class Sprite {
   
     return tileArray;
   }
-}
 
+  /**
+   * Line up the specified edge of a sprite against a tile. This is usually due to a collision.
+   */
+  flushPosition(coord) {
+    if (coord === 'x') {
+      let oldPos = this.x + this.xM;
+      let newPos = oldPos;
+      // these can be re-factored and combined, but for now it's fine
+      if (this.xM < 0) {
+        newPos += (this.tileSize - (oldPos % this.tileSize));
+      } else {
+        newPos -= ((oldPos + this.width) % this.tileSize);
+      }
+      this.x = round(newPos);
+      console.log('x is now', this.x);
+    } else {
+      let oldPos = this.y + this.yM;
+      let newPos = oldPos;
+      // ditto on the re-factoring
+      if (this.yM < 0) {
+        newPos += (this.tileSize - (oldPos % this.tileSize));
+        //_sprite.y = round(_sprite.y + _sprite.yM + TILE_SIZE - ((_sprite.y + _sprite.yM) % TILE_SIZE));
+      } else {
+        newPos -= ((oldPos + this.height) % this.tileSize);
+        //_sprite.y = round(_sprite.y + _sprite.yM - ((_sprite.y + _sprite.yM) % _sprite.height));
+      }
+      this.y = round(newPos);
+     }
+  }
+}
