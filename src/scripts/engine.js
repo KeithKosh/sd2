@@ -16,8 +16,8 @@ let _assets;
 
 let _levelData = [];
 let _sprite = new Sprite(
-  12,
-  20,
+  10,
+  18,
   TILE_SIZE,
   TILE_SIZE,
   TILE_SIZE
@@ -51,9 +51,9 @@ function _gameLoop() {
 
   // loop CONTINUES with input monitoring/influencing.
   if (_activeInput.includes(KEY_RIGHT)) {
-    _sprite.xM += 1;
+    _sprite.xM += 0.75;
   } else if (_activeInput.includes(KEY_LEFT)) {
-    _sprite.xM += -1;
+    _sprite.xM -= 0.75;
   }
 
   if (_activeInput.includes(KEY_JUMP)) {
