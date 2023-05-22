@@ -1,4 +1,6 @@
 import settings from "./settings.js";
+import { Input } from './input.js';
+import { Player } from './player.js';
 
 // TODO: these should be moved somewhere better probably
 let canvas;
@@ -6,6 +8,12 @@ let context;
 
 let canvasWidth;
 let canvasHeight;
+
+let input;
+let player; // this will DEFINITELY be moving
+let gameTick = 0;
+
+let { round } = Math;
 
 document.addEventListener('DOMContentLoaded', init, false);
 
@@ -24,9 +32,14 @@ function init() {
   context.imageSmoothingEnabled = false;
 
   // TODO, these might end up moving/changing...
+  document.body.style.backgroundColor = '#000';
   document.body.style.height = '100%';
   document.body.style.overflow = 'hidden';
   document.body.appendChild(canvas);
+
+  // likely to be moved to some kind of init before we call gameLoop...
+  player = new Player();
+  input = new Input();
 
   gameLoop();
 }
@@ -34,17 +47,21 @@ function init() {
 function gameLoop() {
   // TODO: need to cap this at 60fps
 
+  gameTick++;
+  if (gameTick <= settings.FRAME_DELAY) return requestAnimationFrame(gameLoop);
+  gameTick = 0;
+
+  updateMovement();
+
   clearCanvas();
   drawBG();
   drawTiles(); // TODO: this will be "lower layer" tiles as a param
-  // TODO: read input
-  // TODO: update movement vars, camera, etc.
-  // TODO: draw sprites
+  drawSprites();
   // TODO: draw FG tiles (i.e. drawTiles(false) for "higher layer" tiles)
   // TODO: any screen effects? distortion, lighting, etc...
-  // TODO: draw UI
+  drawUI();
 
-  //requestAnimationFrame(gameLoop);
+  requestAnimationFrame(gameLoop);
 }
 
 function clearCanvas() {
@@ -79,4 +96,34 @@ function drawTiles() {
       }
     }
   }
+}
+
+function drawSprites() {
+  // only player character to start
+  context.fillStyle = '#dddddd';
+  context.fillRect(round(player.x), round(player.y), player.width, player.height);
+}
+
+function updateMovement() {
+  // TODO: will add camera, other sprites
+
+  // for (sprite in sprites)
+  player.applyMomentum(input.queue);
+  // end for
+}
+
+function drawUI() {
+  // TODO: this will be headsup display with CDs collected, lives, etc.
+  // right now it's just debug stuffs
+
+  let debugStateText = `x:${player.x.toPrecision(5)
+  } y:${player.y.toPrecision(5)
+  } xSpeed: ${player.xSpeed.toPrecision(5)
+  } ySpeed: ${player.ySpeed.toPrecision(5)
+  } inputs: ${input.queue}`;
+
+  context.fillStyle = '#050505';
+  context.font = 'bold 10px monospace';
+  context.textBaseline = 'hanging'; // 'top';
+  context.fillText(debugStateText, 2, 2);
 }
