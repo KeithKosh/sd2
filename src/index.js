@@ -1,4 +1,5 @@
 import settings from "./settings.js";
+import map from './map.js';
 import { Input } from './input.js';
 import { Player } from './player.js';
 
@@ -11,6 +12,7 @@ let canvasHeight;
 
 let input;
 let player; // this will DEFINITELY be moving
+
 let gameTick = 0;
 
 let { round } = Math;
@@ -85,13 +87,10 @@ function drawTiles() {
     context.fillRect(x + 1, y + 1, settings.TILE_SIZE - 2, settings.TILE_SIZE - 2);
   }
 
-  // TODO: replace with loaded map data(probably array or string parse)
-  // just a border for now...
+  // TODO: this will eventually take camera position into account...
   for (let y = 0; y < settings.SCREEN_HEIGHT; y++) {
     for (let x = 0; x < settings.SCREEN_WIDTH; x++) {
-      // only draw the full top and bottom rows, and the first/last column otherwise
-      if ((y == 0 || y == settings.SCREEN_HEIGHT - 1) ||
-        (x == 0 || x == settings.SCREEN_WIDTH - 1)) {
+      if (map[y][x] > 0) {
         drawTile(x * settings.TILE_SIZE, y * settings.TILE_SIZE);
       }
     }
